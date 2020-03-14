@@ -1,7 +1,3 @@
-body {
-  margin: 10px;
-}
-
 .ant-btn {
   height: 40px;
   width: 150px;
@@ -20,4 +16,16 @@ body {
   color: #fff;
   background-color: #000000cc;
   border-color: #000000cc;
+}
+
+.ant-table-pagination.ant-pagination {
+  float: none;
+  text-align: center;
+}
+
+.ant-input-group-wrapper.searchBox {
+  width: 30%;
+}
+.ant-input-group-wrapper.searchBox .ant-btn {
+  width: 70px;
 }
