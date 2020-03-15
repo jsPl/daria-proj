@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useParams, useHistory } from 'react-router-dom';
-import { Table, Tag } from 'antd';
+import { Table, Tag, Tooltip } from 'antd';
 import { LeftOutlined, RightOutlined, CheckOutlined } from '@ant-design/icons';
-import { useDataApi } from '../modules/api';
-import { formatCurrency, formatDateTime } from '../modules/utils';
+import { useDataApi, handleApiQueryChange } from '../modules/api';
+import { formatCurrency, formatDateTime, truncateString } from '../modules/utils';
 import SearchBox from './SearchBox';
 
 const { Column } = Table;
@@ -14,29 +14,27 @@ function RequestList() {
     const { page = 1, sortBy = 'Id', sortOrder = 'asc' } = useParams();
     const history = useHistory();
 
-    //const apiEndpointSearchParams = new URLSearchParams(`_page=${page}&_limit=${DEFAULT_PAGE_SIZE}&_sort=${sortBy}&_order=${sortOrder}`);
+    const initialApiQuery = `${API_ENDPOINT}?_page=${page}&_limit=${DEFAULT_PAGE_SIZE}&_sort=${sortBy}&_order=${sortOrder}`;
+    const [{ data, isLoading, totalItemsCount, url }, doFetch] = useDataApi(initialApiQuery, []);
 
-    const [apiEndpointSearchParams, setApiEndpointSearchParams] = useState(new URLSearchParams(`_page=${page}&_limit=${DEFAULT_PAGE_SIZE}&_sort=${sortBy}&_order=${sortOrder}`));
-    const [{ data, isLoading, totalItemsCount }, doFetch] = useDataApi(`${API_ENDPOINT}?${apiEndpointSearchParams.toString()}`, []);
     const paginationCfg = configurePagination(page, totalItemsCount);
 
-    const handleChange = (pagination, filters, sorter) => {
-        handleSort(sorter, apiEndpointSearchParams);
-        handlePagination(pagination, apiEndpointSearchParams);
-
-        doFetch(`${API_ENDPOINT}?${apiEndpointSearchParams.toString()}`);
+    const handleChange = payload => {
+        //console.log('handleChange', payload)
+        doFetch(handleApiQueryChange(url, payload))
     }
 
     return (
         <>
-            <SearchBox onSearch={value => handleSearch(value, apiEndpointSearchParams, history)} />
+            <SearchBox onSearch={searchText => { handleChange({ searchText }); history.push('/dashboard/1') }} />
 
-            <Table dataSource={data} rowKey='Id' loading={isLoading} pagination={paginationCfg} onChange={handleChange}>
+            <Table dataSource={data} rowKey='Id' loading={isLoading} pagination={paginationCfg}
+                onChange={(pagination, filters, sorter) => handleChange({ pagination, filters, sorter })}>
                 <Column title='Id' dataIndex='Id' sorter defaultSortOrder='ascend' />
                 <Column title='Request Name' dataIndex='RequestName' sorter />
                 <Column title='Requestor' dataIndex='Requestor' />
                 <Column title='Good Ending' dataIndex='GoodEnding' />
-                <Column title='Description' dataIndex='Description' width={500} />
+                <Column title='Description' dataIndex='Description' width={500} render={value => textToTooltip(value)} />
                 <Column title='Need Story Teller' dataIndex='NeedStoryteller' render={value => value ? <CheckOutlined /> : null} />
                 <Column title='Status' dataIndex='Status' sorter />
                 <Column title='Budget' dataIndex='Budget' sorter render={value => formatCurrency(value)} />
@@ -47,44 +45,7 @@ function RequestList() {
     )
 }
 
-const handleSearch = (text, urlSearchParams, history) => {
-    console.log('handleSearch', text)
-
-    if (text && text.trim() !== '') {
-        urlSearchParams.set('q', text);
-        urlSearchParams.set('_page', 1);
-        history.push('/dashboard/1');
-    }
-    //doFetch(`${API_ENDPOINT}?${urlSearchParams.toString()}`);
-}
-
-const handleSort = (sorter, urlSearchParams) => {
-    if (sorter) {
-        const { field, order = 'asc' } = sorter;
-        //console.log('handleChange', sorter, field, order);
-
-        if (field) {
-            urlSearchParams.set('_sort', field);
-            urlSearchParams.set('_order', order === 'ascend' ? 'asc' : 'desc');
-            //doFetch(`${API_ENDPOINT}?${urlSearchParams.toString()}`);
-        }
-    }
-}
-
-const handlePagination = (pagination, urlSearchParams) => {
-    //console.log('handlePagination', pagination);
-    if (pagination) {
-        urlSearchParams.set('_page', pagination.current);
-        urlSearchParams.set('_limit', pagination.pageSize);
-        //doFetch(`${API_ENDPOINT}?${urlSearchParams.toString()}`);
-    }
-}
-
 const configurePagination = (currentPage, totalItems = 0) => {
-    // if (Number(totalItems) === 0) {
-    //     return false;
-    // }
-
     return {
         current: Number(currentPage),
         total: Number(totalItems),
@@ -105,5 +66,17 @@ const configurePagination = (currentPage, totalItems = 0) => {
 const wantedCharactersToTags = value =>
     value.split(';')
         .map(o => o.trim() !== '' && <Tag key={o}>{o}</Tag>)
+
+const textToTooltip = value => {
+    const maxLength = 50;
+    if (value && value.length > maxLength) {
+        return (
+            <Tooltip title={truncateString(value, 500)}>
+                {truncateString(value, maxLength)}
+            </Tooltip>
+        )
+    }
+    return value;
+}
 
 export default RequestList;

@@ -12,3 +12,10 @@ export const formatDateTime = (date = new Date()) => {
     const timeAsString = date.toLocaleTimeString(locale);
     return dateAsString + ' ' + timeAsString;
 }
+
+export const truncateString = (value, max = 50) => {
+    if (value && value.length > max) {
+        return value.substr(0, max - 1) + '...'
+    }
+    return value;
+}
