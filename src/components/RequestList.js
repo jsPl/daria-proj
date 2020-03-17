@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, useParams, useHistory } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { Table, Tag, Tooltip } from 'antd';
-import { LeftOutlined, RightOutlined, CheckOutlined } from '@ant-design/icons';
-import { useDataApi, handleApiQueryChange } from '../modules/api';
+import { CheckOutlined } from '@ant-design/icons';
+import { useDataApi, handleApiQueryChange, configurePagination } from '../modules/api';
 import { formatCurrency, formatDateTime, truncateString } from '../modules/utils';
 import SearchBox from './SearchBox';
 
@@ -17,7 +17,7 @@ function RequestList() {
     const initialApiQuery = `${API_ENDPOINT}?_page=${page}&_limit=${DEFAULT_PAGE_SIZE}&_sort=${sortBy}&_order=${sortOrder}`;
     const [{ data, isLoading, totalItemsCount, url }, doFetch] = useDataApi(initialApiQuery, []);
 
-    const paginationCfg = configurePagination(page, totalItemsCount);
+    const paginationCfg = configurePagination({ currentPage: page, totalItems: totalItemsCount, pageSize: DEFAULT_PAGE_SIZE, uriPath: '/dashboard/' });
 
     const handleChange = payload => {
         //console.log('handleChange', payload)
@@ -43,24 +43,6 @@ function RequestList() {
             </Table>
         </>
     )
-}
-
-const configurePagination = (currentPage, totalItems = 0) => {
-    return {
-        current: Number(currentPage),
-        total: Number(totalItems),
-        pageSize: DEFAULT_PAGE_SIZE,
-        position: 'both',
-        itemRender(page, type) {
-            if (type === 'prev') {
-                return <Link to={`/dashboard/${page}`}><LeftOutlined /></Link>;
-            }
-            if (type === 'next') {
-                return <Link to={`/dashboard/${page}`}><RightOutlined /></Link>;
-            }
-            return <Link to={`/dashboard/${page}`}>{page}</Link>;
-        }
-    }
 }
 
 const wantedCharactersToTags = value =>

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 
 const API_HOST = 'http://localhost:3004';
 
@@ -70,3 +72,19 @@ export const handleApiQueryChange = (apiQuery, { pagination, sorter, searchText 
 
     return url.pathname + '?' + queryParams.toString();
 }
+
+export const configurePagination = ({ currentPage, totalItems = 0, pageSize, uriPath = '/' }) => ({
+    current: Number(currentPage),
+    total: Number(totalItems),
+    pageSize,
+    position: 'both',
+    itemRender(page, type) {
+        if (type === 'prev') {
+            return <Link to={`${uriPath}${page}`}><LeftOutlined /></Link>;
+        }
+        if (type === 'next') {
+            return <Link to={`${uriPath}${page}`}><RightOutlined /></Link>;
+        }
+        return <Link to={`${uriPath}${page}`}>{page}</Link>;
+    }
+})
