@@ -7,7 +7,7 @@ import { formatCurrency, formatDateTime, truncateString } from '../modules/utils
 import SearchBox from './SearchBox';
 
 const { Column } = Table;
-const DEFAULT_PAGE_SIZE = 5;
+const DEFAULT_PAGE_SIZE = 10;
 const API_ENDPOINT = '/requests';
 
 function RequestList() {
